@@ -20,6 +20,8 @@ class Package < ActiveRecord::Base
     end
 
     Tempfile.open("cran-indexer-package-#{name}") do |f|
+      f.binmode
+
       f.write(
         Net::HTTP.get_response(
           URI("#{REPO_BASE_URL}/#{name}_#{version}.tar.gz")
