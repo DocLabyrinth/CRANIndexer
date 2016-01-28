@@ -77,4 +77,38 @@ describe Package do
       it_behaves_like "required date field", :publication
     end
   end
+
+  describe "Package#from_dcf" do
+    it "returns a Package object with :name, :version filled in" do
+      p = Package.from_dcf(dcf_hash)
+      expect( p.name ).to eq("abc")
+      expect( p.version ).to eq("2.1")
+    end
+
+    it "throws an ArgumentError if the Package field is missing" do
+      expect do
+        dcf = dcf_hash
+        dcf["Package"] = nil
+        Package.from_dcf(dcf)
+      end.to raise_error(ArgumentError, "The dcf object must have a Package field")
+    end
+
+    it "throws an ArgumentError if the Version field is missing" do
+      expect do
+        dcf = dcf_hash
+        dcf["Version"] = nil
+        Package.from_dcf(dcf)
+      end.to raise_error(ArgumentError, "The dcf object must have a Version field")
+    end
+
+    def dcf_hash
+      {
+        "Package"=>"abc",
+        "Version"=>"2.1",
+        "Depends"=>"R (>= 2.10), abc.data, nnet, quantreg, MASS, locfit",
+        "License"=>"GPL (>= 3)",
+        "NeedsCompilation"=>"no"
+      }
+    end
+  end
 end
