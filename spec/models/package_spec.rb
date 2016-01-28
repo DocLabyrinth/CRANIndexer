@@ -111,4 +111,62 @@ describe Package do
       }
     end
   end
+
+  describe "#fetch_description!" do
+    it "downloads the package to a temp file and extracts the description" do
+      p = Package.new(:name => "bdrift", :version => "1.1.7")
+
+      allow( Net::HTTP ).to receive(:get_response).with(
+        URI("#{Package::REPO_BASE_URL}/#{p.name}_#{p.version}.tar.gz")
+      ).and_return(OpenStruct.new(:body => fixture_gzip))
+
+      p.fetch_description!
+
+      desc = fixture_description_hash
+
+      expect( p.title ).to eq(desc["Title"])
+
+      # manually extracting the file and reading it through ruby give the same
+      # results but one preserves stretches of whitespace, the other doesn't.
+      # This is a quick workaround since the text itself is the same
+      expect( p.description.gsub(/\s+/, " ") ).to eq( desc["Description"].gsub(/\s+/, " ") )
+
+      expect( p.repository ).to eq(desc["Repository"])
+
+      # FIXME: field is called licence, dcf has it spelt license, for now just map it
+      expect( p.licence ).to eq(desc["License"])
+
+      expect( p.date ).to eq( DateTime.parse(desc["Date"], '%Y-%M-%d') )
+      expect( p.packaged ).to eq( DateTime.parse(desc["Packaged"], '%Y-%M-%d %H:%M:%S') )
+      expect( p.publication ).to eq( DateTime.parse(desc["Date/Publication"], '%Y-%M-%d %H:%M:%S') )
+
+      expect( p.valid? ).to eq(true)
+    end
+
+    describe "raises an ArgumentError" do
+      it "if version is not present" do
+        p = Package.new(:name => "bdrift")
+        expect do
+          p.fetch_description!
+        end.to raise_error(ArgumentError, "name and version are required before fetching the package description")
+      end
+
+      it "if name is not present" do
+        p = Package.new(:version => "1.1.7")
+        expect do
+          p.fetch_description!
+        end.to raise_error(ArgumentError, "name and version are required before fetching the package description")
+      end
+    end
+
+    def fixture_gzip
+      path = File.join(File.dirname(__FILE__), "..", "..", "data", "bdrift_1.1.7.tar.gz")
+      File.read(path)
+    end
+
+    def fixture_description_hash
+      path = File.join(File.dirname(__FILE__), "..", "..", "data", "bdrift_description.dcf")
+      Dcf.parse( File.read(path) ).first
+    end
+  end
 end

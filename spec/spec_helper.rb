@@ -92,3 +92,4 @@ RSpec.configure do |config|
 end
 
 require "rails_helper"
+require "ostruct"
