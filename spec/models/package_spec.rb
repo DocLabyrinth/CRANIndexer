@@ -143,6 +143,8 @@ describe Package do
       expect( p.valid? ).to eq(true)
     end
 
+    # TODO: test when Date is not supplied
+
     describe "raises an ArgumentError" do
       it "if version is not present" do
         p = Package.new(:name => "bdrift")

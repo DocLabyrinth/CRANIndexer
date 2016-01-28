@@ -41,9 +41,15 @@ class Package < ActiveRecord::Base
       self.description = desc_obj["Description"]
       self.repository = desc_obj["Repository"]
       self.licence = desc_obj["License"]
-      self.date =  DateTime.parse(desc_obj["Date"], '%Y-%M-%d' )
+
       self.packaged =  DateTime.parse(desc_obj["Packaged"], '%Y-%M-%d %H:%M:%S' )
       self.publication =  DateTime.parse(desc_obj["Date/Publication"], '%Y-%M-%d %H:%M:%S' )
+
+      self.date = if desc_obj.include?("Date")
+        DateTime.parse(desc_obj["Date"], '%Y-%M-%d' )
+      else
+        self.publication
+      end
     end
   end
 end
